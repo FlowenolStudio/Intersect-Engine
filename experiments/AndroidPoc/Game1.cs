@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Intersect.Client.Framework.Plugins.Interfaces;
+using Intersect.Client.ThirdParty;
 using XnaColor = Microsoft.Xna.Framework.Color;
 using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
 
@@ -12,6 +13,7 @@ public sealed class Game1 : Game
     private SpriteBatch? _spriteBatch;
     private Texture2D? _pixel;
     private string _clientFrameworkAssembly = "unresolved";
+    private string _clientCoreAssembly = "unresolved";
 
     public Game1()
     {
@@ -23,6 +25,7 @@ public sealed class Game1 : Game
     protected override void Initialize()
     {
         _clientFrameworkAssembly = typeof(IClientNetworkHelper).Assembly.GetName().Name ?? "unknown";
+        _clientCoreAssembly = typeof(Steam.SupportedAttribute).Assembly.GetName().Name ?? "unknown";
         _graphics.IsFullScreen = true;
         base.Initialize();
     }

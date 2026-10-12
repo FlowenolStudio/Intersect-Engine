@@ -38,3 +38,12 @@ Keep the authoritative server and protocol unchanged. First isolate a reusable c
 - The general remediation for custom/prebuilt native libraries is to rebuild every `.so` with 16 KB ELF alignment (`-Wl,-z,max-page-size=16384`; Android also documents `-Wl,-z,common-page-size=16384` for older NDKs), then verify both ELF segment alignment and APK zip alignment.
 - If a dependency still fails, alternatives are: upgrade to a fixed vendor package, rebuild/fork the native dependency with the flags, or replace the dependency. Suppressing XA0141 is not a compatibility fix.
 - Sources: Android Developers, “Support 16 KB page sizes”; MonoGame 3.8.4.1 release/migration notes. This probe has not yet been tested on a 16 KB-page Android image.
+
+## Game snapshot inventory
+
+- Source installation was inspected read-only while the human editor/server/client were running.
+- Server data: `Server/resources/gamedata.db` (map/game definitions), `playerdata.db` (accounts/characters), and `logging.db`.
+- Client cache: `Client and Editor/resources/mapcache.db`; static client resources include tilesets, entities, GUI, sounds, music, and fonts.
+- A separate snapshot exists at `Engine-Development/test-data/Game-DevelopmentSnapshot`. Each SQLite database was copied through SQLite's online backup API and passed `PRAGMA integrity_check`; static files were copied separately. `SNAPSHOT_MANIFEST.json` records hashes.
+- The snapshot's isolated server config uses port `5401`, disables UPnP and external port checks, and the copied client config targets Android emulator host gateway `10.0.2.2:5401`.
+- The original installation remains untouched. A full cross-database point-in-time snapshot was not claimed because the source server remained active; isolated server startup must be verified before any client connection test.

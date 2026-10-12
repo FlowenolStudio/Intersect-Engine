@@ -18,6 +18,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Intersect.Client.Framework\Intersect.Client.Framework.csproj" />
+    <ProjectReference Include="..\..\Intersect.Client.Core\Intersect.Client.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="$(IntersectRepoPath)\assets\intersect-logo-qu.ico" />
