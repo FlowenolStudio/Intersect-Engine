@@ -303,7 +303,7 @@ public partial class MainMenu : MutableInterface
         SettingsWindow.Show(_mainMenuWindow);
     }
 
-    private void HandleNetworkStatusChanged() => _mainMenuWindow.UpdateDisabled();
+    private void HandleNetworkStatusChanged() => _mainMenuWindow.RunOnMainThread(_mainMenuWindow.UpdateDisabled);
 
     public static void SetNetworkStatus(NetworkStatus networkStatus, bool resetStatusCheck = false)
     {

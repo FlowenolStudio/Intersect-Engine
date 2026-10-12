@@ -1,7 +1,12 @@
 using Android.App;
+using Android.Content;
 using Android.OS;
+using Android.Text;
 using Android.Util;
 using Android.Views;
+using Android.Views.InputMethods;
+using Android.Widget;
+using Intersect.Client.Framework.Gwen.Control;
 using Microsoft.Xna.Framework;
 using AndroidProcess = Android.OS.Process;
 
@@ -11,6 +16,8 @@ namespace Intersect.Android.Poc;
 public class MainActivity : AndroidGameActivity
 {
     private int _copiedResourceFiles;
+    private EditText? _imeEditText;
+    private TextBox? _activeTextBox;
 
     private void CopyAssetTree(string assetPath, string targetPath)
     {
@@ -36,6 +43,30 @@ public class MainActivity : AndroidGameActivity
         using var destination = File.Create(targetPath);
         source.CopyTo(destination);
         _copiedResourceFiles++;
+    }
+
+    private void HandleImeTextChanged(object? sender, TextChangedEventArgs args)
+    {
+        if (_activeTextBox is not null && _imeEditText is not null && _activeTextBox.Text != _imeEditText.Text)
+        {
+            _activeTextBox.Text = _imeEditText.Text;
+        }
+    }
+
+    private void ActivateIme(TextBox textBox)
+    {
+        RunOnUiThread(() =>
+        {
+            _activeTextBox = textBox;
+            if (_imeEditText is null)
+            {
+                return;
+            }
+
+            _imeEditText.Text = textBox.Text;
+            _imeEditText.RequestFocus();
+            ((InputMethodManager)GetSystemService(InputMethodService)!).ShowSoftInput(_imeEditText, ShowFlags.Implicit);
+        });
     }
 
     private static void Lifecycle(string stage)
@@ -95,11 +126,24 @@ public class MainActivity : AndroidGameActivity
             Log.Info("IntersectAndroid", "Client framework created IntersectGame; attaching view");
             var view = (View)game.Services.GetService(typeof(View))!;
             Lifecycle($"SetContentView-begin view={view.GetType().FullName}");
-            SetContentView(view);
+            var root = new FrameLayout(this);
+            root.AddView(view, new FrameLayout.LayoutParams(-1, -1));
+            _imeEditText = new EditText(this)
+            {
+                Alpha = 0.01f,
+                Background = null,
+            };
+            _imeEditText.SetTextColor(global::Android.Graphics.Color.Transparent);
+            _imeEditText.SetCursorVisible(false);
+            _imeEditText.InputType = global::Android.Text.InputTypes.ClassText | global::Android.Text.InputTypes.TextVariationVisiblePassword;
+            _imeEditText.TextChanged += HandleImeTextChanged;
+            root.AddView(_imeEditText, new FrameLayout.LayoutParams(1, 1));
+            SetContentView(root);
             Lifecycle("SetContentView-return");
         };
         Intersect.Client.Core.AndroidClientHost.StartupFailed = exception =>
             Log.Error("IntersectAndroid", exception.ToString());
+        Intersect.Client.Core.AndroidClientHost.TextInputRequested = ActivateIme;
         Intersect.Client.Core.AndroidClientHost.BootstrapStep = step =>
             Log.Info("IntersectAndroid", $"Bootstrap step: {step}");
 

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Intersect.Client.Core;
 using Intersect.Client.Core.Controls;
 using Intersect.Client.Framework.GenericClasses;
 using Intersect.Client.Framework.Gwen.Control;
@@ -11,6 +12,7 @@ using Intersect.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Input.Touch;
 using Keys = Intersect.Client.Framework.GenericClasses.Keys;
 using Rectangle = Intersect.Client.Framework.GenericClasses.Rectangle;
 
@@ -48,6 +50,9 @@ public partial class MonoInput : GameInput
     private int _activeGamePad;
 
     private bool _keyboardOpened;
+    private bool _androidTouchActive;
+    private bool _androidTouchLogged;
+    private Vector2 _androidTouchPosition;
     private IControlSet _controlSet;
 
     public MonoInput(Game myGame)
@@ -220,6 +225,14 @@ public partial class MonoInput : GameInput
 
         if (bs == ButtonState.Pressed && !IsMouseButtonDown(mb))
         {
+#if INTERSECT_ANDROID
+            var component = Interface.Interface.FindComponentUnderCursor();
+            if (component is TextBox textBox)
+            {
+                AndroidClientHost.NotifyTextInputRequested(textBox);
+            }
+            AndroidClientHost.NotifyBootstrapStep($"mouse-down pos={GetMousePosition().X:0},{GetMousePosition().Y:0} button={mb} component={component?.GetType().Name ?? "none"} bounds={component?.GlobalBounds} disabled={component?.IsDisabledByTree} mouseInput={component?.MouseInputEnabled}");
+#endif
             if (Core.Input.TestInterceptMouse(modifier, mb, down: true))
             {
                 return;
@@ -238,6 +251,7 @@ public partial class MonoInput : GameInput
                 return;
             }
 
+            AndroidClientHost.NotifyBootstrapStep($"mouse-up pos={GetMousePosition().X:0},{GetMousePosition().Y:0} button={mb}");
             Interface.Interface.GwenInput.ProcessMessage(
                 new GwenInputMessage(IntersectInput.InputEvent.MouseUp, GetMousePosition(), mb, Keys.Alt)
             );
@@ -337,10 +351,58 @@ public partial class MonoInput : GameInput
             var keyboardState = Keyboard.GetState();
             var mouseState = Mouse.GetState();
 
+#if INTERSECT_ANDROID
+            var touchLocations = TouchPanel.GetState();
+            var touch = touchLocations.FirstOrDefault();
+            if (touch.State is TouchLocationState.Pressed or TouchLocationState.Moved)
+            {
+                _androidTouchActive = true;
+                _androidTouchPosition = touch.Position;
+                if (!_androidTouchLogged)
+                {
+                    _androidTouchLogged = true;
+                    AndroidClientHost.NotifyBootstrapStep(
+                        $"touch-first raw={touch.Position.X:0},{touch.Position.Y:0} viewport={mMyGame.GraphicsDevice.Viewport.Width}x{mMyGame.GraphicsDevice.Viewport.Height} offset={((MonoRenderer)Core.Graphics.Renderer).GetMouseOffset().X:0.###},{((MonoRenderer)Core.Graphics.Renderer).GetMouseOffset().Y:0.###} screen={Core.Graphics.Renderer.ScreenWidth}x{Core.Graphics.Renderer.ScreenHeight}"
+                    );
+                }
+
+                mouseState = new MouseState(
+                    (int)touch.Position.X,
+                    (int)touch.Position.Y,
+                    mouseState.ScrollWheelValue,
+                    ButtonState.Pressed,
+                    mouseState.MiddleButton,
+                    mouseState.RightButton,
+                    mouseState.XButton1,
+                    mouseState.XButton2,
+                    mouseState.HorizontalScrollWheelValue
+                );
+            }
+            else if (_androidTouchActive)
+            {
+                _androidTouchActive = false;
+                mouseState = new MouseState(
+                    (int)_androidTouchPosition.X,
+                    (int)_androidTouchPosition.Y,
+                    mouseState.ScrollWheelValue,
+                    ButtonState.Released,
+                    mouseState.MiddleButton,
+                    mouseState.RightButton,
+                    mouseState.XButton1,
+                    mouseState.XButton2,
+                    mouseState.HorizontalScrollWheelValue
+                );
+            }
+#endif
+
             if (mouseState.X != mMouseX || mouseState.Y != mMouseY)
             {
-                mMouseX = (int)(mouseState.X * ((MonoRenderer)Core.Graphics.Renderer).GetMouseOffset().X);
-                mMouseY = (int)(mouseState.Y * ((MonoRenderer)Core.Graphics.Renderer).GetMouseOffset().Y);
+                mMouseX = OperatingSystem.IsAndroid()
+                    ? mouseState.X
+                    : (int)(mouseState.X * ((MonoRenderer)Core.Graphics.Renderer).GetMouseOffset().X);
+                mMouseY = OperatingSystem.IsAndroid()
+                    ? mouseState.Y
+                    : (int)(mouseState.Y * ((MonoRenderer)Core.Graphics.Renderer).GetMouseOffset().Y);
 
                 CursorMovementDevice = InputDeviceType.Mouse;
 

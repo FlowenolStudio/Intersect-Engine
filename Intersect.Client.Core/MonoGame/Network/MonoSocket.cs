@@ -325,7 +325,7 @@ internal partial class MonoSocket : GameSocket
 
         var elapsed = now - requestMetadata.RequestTime;
         _ping = (int)elapsed.TotalMilliseconds;
-        AndroidClientHost.NotifyBootstrapStep($"server-status-receive pingMs={_ping}");
+        AndroidClientHost.NotifyBootstrapStep($"server-status-receive pingMs={_ping} status={responsePacket.Status}");
         _serverStatusRequestMetadata = null;
     }
 
