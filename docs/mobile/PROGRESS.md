@@ -13,8 +13,8 @@
 
 ## Active
 
-- Establish an Android-capable build toolchain in Engine-Development only.
-- Decide the smallest client-core/backend seam for an Android proof of concept.
+- Android workload is installed in the Engine development environment; install an isolated JDK and Android SDK next.
+- Establish the smallest client-core/backend seam for an Android proof of concept.
 - Install/enable the missing .NET 8 runtime needed to execute the existing NUnit tests, subject to environment approval.
 
 ## Next actions

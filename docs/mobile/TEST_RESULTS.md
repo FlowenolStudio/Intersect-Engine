@@ -15,6 +15,13 @@ Environment: Windows 11, x64; .NET SDK `10.0.401`; no .NET 8 runtime installed; 
 - Targeted `Intersect.Tests.Client` restore/build completed, but test execution aborted: the test host requires `Microsoft.NETCore.App 8.0.0`; only `10.0.12` is installed.
 - Result: tests are **not verified** in this environment. No successful test count is claimed.
 
+## Android toolchain probe
+
+- `dotnet workload install android --skip-manifest-update`: passed; Android workload `36.1.2/10.0.100` installed for the .NET 10 SDK.
+- A minimal `net10.0-android` project using `MonoGame.Framework.Android` `3.8.2.1105` restored successfully after constraining runtime identifiers to Android ABIs.
+- Build is currently blocked by missing Android SDK and Java 11+; the local dependency target could not provision them because Java is absent. No Android APK was produced.
+- `adb`, `sdkmanager`, `avdmanager`, and `java` are not available on PATH.
+
 ## Stable package smoke check
 
 `Game-Development` contains the v0.8.0-beta.581 Windows full package with separate Client and Editor and Server directories. The packaged client and server started and exited cleanly when invoked with `--help`; the editor process started and returned exit code 1 in the headless smoke probe after logging its startup/version, so interactive editor operation still needs a GUI validation pass.
