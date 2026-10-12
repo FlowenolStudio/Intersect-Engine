@@ -73,6 +73,7 @@ internal partial class IntersectGame : Game
         try
         {
             Strings.Load();
+            AndroidClientHost.NotifyBootstrapStep("strings-loaded");
         }
         catch (Exception exception)
         {
@@ -87,6 +88,7 @@ internal partial class IntersectGame : Game
             PreferHalfPixelOffset = true,
             PreferMultiSampling = true,
         };
+        AndroidClientHost.NotifyBootstrapStep("graphics-manager-created");
 
         mGraphics.PreparingDeviceSettings += (_, args) =>
         {
@@ -104,6 +106,7 @@ internal partial class IntersectGame : Game
 
         // Load configuration.
         Globals.Database.LoadPreferences();
+        AndroidClientHost.NotifyBootstrapStep("preferences-loaded");
 
         Window.IsBorderless = Context.StartupOptions.BorderlessWindow;
 
@@ -111,6 +114,7 @@ internal partial class IntersectGame : Game
         {
             OverrideResolution = Context.StartupOptions.ScreenResolution,
         };
+        AndroidClientHost.NotifyBootstrapStep("renderer-created");
 
         Globals.InputManager = new MonoInput(this);
         GameClipboard.Instance = new MonoClipboard();
@@ -615,6 +619,7 @@ internal partial class IntersectGame : Game
         /// <inheritdoc />
         public void Start(IClientContext context, Action postStartupAction)
         {
+            AndroidClientHost.NotifyBootstrapStep("platform-runner-start");
             try
             {
                 DoSdlInit(12832);
@@ -627,7 +632,10 @@ internal partial class IntersectGame : Game
                 );
             }
 
+            AndroidClientHost.NotifyBootstrapStep("creating-intersect-game");
             using var game = new IntersectGame(context, postStartupAction);
+            AndroidClientHost.NotifyBootstrapStep("intersect-game-created");
+            AndroidClientHost.NotifyGameCreated(game);
             try
             {
                 game.Run();

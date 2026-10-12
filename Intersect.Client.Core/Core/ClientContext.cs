@@ -92,9 +92,19 @@ internal sealed partial class ClientContext : ApplicationContext<ClientContext, 
     /// <inheritdoc />
     protected override void InternalStart()
     {
-        Networking.Network.PacketHandler = new PacketHandler(this, PacketHelper.HandlerRegistry);
-        PlatformRunner = typeof(ClientContext).Assembly.CreateInstanceOf<IPlatformRunner>();
-        PlatformRunner.Start(this, PostStartup);
+        try
+        {
+            Networking.Network.PacketHandler = new PacketHandler(this, PacketHelper.HandlerRegistry);
+            PlatformRunner = OperatingSystem.IsAndroid()
+                ? new Intersect.Client.MonoGame.IntersectGame.MonoGameRunner()
+                : typeof(ClientContext).Assembly.CreateInstanceOf<IPlatformRunner>();
+            PlatformRunner.Start(this, PostStartup);
+        }
+        catch (Exception exception)
+        {
+            AndroidClientHost.NotifyStartupFailed(exception);
+            throw;
+        }
     }
 
     #region Exception Handling

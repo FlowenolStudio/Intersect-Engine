@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using CommandLine;
+using Intersect.Client.Networking;
 using Intersect.Client.Plugins;
 using Intersect.Configuration;
 using Intersect.Core;
@@ -21,8 +23,13 @@ namespace Intersect.Client.Core;
 
 internal static partial class Bootstrapper
 {
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof(ClientCommandLineOptions))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicMethods, typeof(PacketHandlerRegistry))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicMethods, typeof(PacketHandler))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Intersect.Client.MonoGame.IntersectGame.MonoGameRunner))]
     public static void Start(Assembly entryAssembly, params string[] args)
     {
+        AndroidClientHost.NotifyBootstrapStep("parser");
         var parser = new Parser(
             parserSettings =>
             {
@@ -50,19 +57,32 @@ internal static partial class Bootstrapper
             "Client",
             loggingLevelSwitch
         );
+        AndroidClientHost.NotifyBootstrapStep("logger");
 
         PlatformStatistics.Logger = loggerFactory.CreateLogger<PlatformStatistics>();
 
         var packetTypeRegistry = new PacketTypeRegistry(logger, typeof(IntersectPacket).Assembly);
         if (!packetTypeRegistry.TryRegisterBuiltIn())
         {
+            AndroidClientHost.NotifyBootstrapStep("packet-registry-failed");
             logger.LogError("Failed to register built-in packets.");
             return;
         }
+        AndroidClientHost.NotifyBootstrapStep("packet-registry-ready");
 
         var packetHandlerRegistry = new PacketHandlerRegistry(packetTypeRegistry, logger);
+        AndroidClientHost.NotifyBootstrapStep("packet-handler-registry-ready");
         var packetHelper = new PacketHelper(packetTypeRegistry, packetHandlerRegistry);
         _ = FactoryRegistry<IPluginBootstrapContext>.RegisterFactory(PluginBootstrapContext.CreateFactory(typeof(IClientPluginContext), args, parser, packetHelper));
+        AndroidClientHost.NotifyBootstrapStep("plugin-factory-ready");
+
+        if (commandLineOptions is null && OperatingSystem.IsAndroid())
+        {
+            var serverIndex = Array.FindIndex(args, argument => argument is "--server" or "-S");
+            var serverValue = serverIndex >= 0 && serverIndex + 1 < args.Length ? args[serverIndex + 1] : null;
+            commandLineOptions = new ClientCommandLineOptions { Server = serverValue };
+            AndroidClientHost.NotifyBootstrapStep("android-options-fallback");
+        }
 
         if (!string.IsNullOrWhiteSpace(commandLineOptions.WorkingDirectory))
         {
@@ -83,6 +103,7 @@ internal static partial class Bootstrapper
         }
 
         var clientConfiguration = ClientConfiguration.LoadAndSave();
+        AndroidClientHost.NotifyBootstrapStep("configuration-ready");
         loggingLevelSwitch.MinimumLevel = LevelConvert.ToSerilogLevel(clientConfiguration.LogLevel);
 
         if (commandLineOptions.Server is { } server)
@@ -107,6 +128,7 @@ internal static partial class Bootstrapper
         };
 
         ClientContext context = new(entryAssembly, commandLineOptions, clientConfiguration, logger, packetHelper);
+        AndroidClientHost.NotifyBootstrapStep("context-created");
         context.Start();
     }
 

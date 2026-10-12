@@ -16,12 +16,15 @@
 - `Intersect.Client.Core`, `Intersect.Network`, and their shared dependencies now compile for the Android probe; the APK launches with these assemblies packaged, but the real client startup path is not yet called.
 - Read-only inspection identified `Server/resources/gamedata.db`, `playerdata.db`, `logging.db`, and `Client and Editor/resources/mapcache.db`; SQLite online backups and static resources were copied to `test-data/Game-DevelopmentSnapshot` with SHA-256 manifest verification.
 - Isolated Intersect server now runs from the copied snapshot on UDP `5401`; its REST API is isolated on TCP `5402` and returns HTTP 200.
+- The Android host now invokes `Intersect.Client.Core.Program.Main` and reaches the real bootstrap sequence: logger, built-in packet registry, packet-handler registry, plugin factory, client configuration, `ClientContext`, and the Android platform-runner selection.
+- AOT/linker seams were added for reflection-heavy startup (command-line options, packet-handler delegates, and the platform runner). The current runtime blocker is inside `IntersectGame` construction immediately after `GraphicsDeviceManager` creation; Android repeatedly recreates the activity before the renderer/preferences phase completes.
+- Snapshot verification found six persisted maps in `gamedata.db`, six corresponding PNG previews in `mapcache.db`, a map-folder list containing all six IDs, and fourteen tilesets. `Active Maps: 0` therefore does not mean the copied map data is absent; map synchronization remains unverified because the client has not reached networking/rendering.
 
 ## Active
 
 - Android workload and local SDK/JDK dependencies are installed in the Engine development environment; minimal MonoGame Android project builds.
-- Establish the smallest client-core/backend seam for an Android proof of concept.
-- Replace the visual probe with an incremental client-framework host seam, beginning with platform-neutral lifecycle/content interfaces.
+- Diagnose the Android-specific `IntersectGame` construction/activity-recreation blocker without changing the server protocol.
+- After the game view is stable, verify the first UDP packet exchange with `10.0.2.2:5401`, then authentication and map synchronization.
 
 ## Next actions
 

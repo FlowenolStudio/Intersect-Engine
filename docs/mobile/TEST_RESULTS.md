@@ -37,6 +37,14 @@ Environment: Windows 11, x64; .NET SDK `10.0.401`; isolated .NET 8 runtime under
 - The probe now references `Intersect.Client.Framework` and `Intersect.Client.Framework.Core` transitively; the Android build succeeds with that project reference. Client framework runtime behavior is not yet integrated into the render loop.
 - The probe also references `Intersect.Client.Core` and `Intersect.Network`; Release publish and emulator launch still succeed. This verifies packaging/initialization compatibility only, not the full client startup path.
 
+## Actual client lifecycle probe
+
+- Android Release publish/install succeeded repeatedly on `emulator-5554`; the isolated server remained verified on UDP `5401` and HTTP `5402`.
+- `Program.Main` reached these real client-core stages, captured through device logcat: `parser`, `logger`, `packet-registry-ready`, `packet-handler-registry-ready`, `plugin-factory-ready`, Android command-line fallback, `configuration-ready`, `context-created`, `platform-runner-start`, `creating-intersect-game`, `strings-loaded`, and `graphics-manager-created`.
+- The real `ClientContext` and packet-handler initialization therefore execute on Android. No `IntersectGame` view callback, renderer creation, network packet, authentication, map synchronization, or map rendering was observed.
+- The current failure is before the `preferences-loaded` checkpoint in `IntersectGame` construction. The activity is repeatedly recreated and eventually killed by the emulator; no fatal managed exception was emitted in the crash buffer. This is recorded as a platform/window/content initialization blocker, not as a successful client launch.
+- Desktop regression after the seam changes: `dotnet build Intersect.Client.Core/Intersect.Client.Core.csproj -c Debug --no-restore` passed with 0 errors (1 warning). `Intersect.Tests.Client` passed 13/13. The full solution build was not rerun while the live isolated source-built server held its Engine `bin/Debug` assemblies open; the server/API remained untouched and healthy.
+
 ## Isolated server snapshot
 
 - Initial isolated-server startup failure was diagnosed from its copied log: the copied `appsettings.Production.json` still bound the REST API to `127.0.0.1:5400`, which belongs to the human installation.
@@ -62,3 +70,9 @@ Environment: Windows 11, x64; .NET SDK `10.0.401`; isolated .NET 8 runtime under
 - Stable game path: `C:\Studio\Intersect\Game-Development`
 - Game-Development is not a Git worktree and has no source/build linkage to Engine-Development.
 - No mobile source changes or experimental binaries were copied into Game-Development.
+
+## Map availability verification
+
+- Snapshot `Server/resources/gamedata.db`: `Maps` has 6 rows, `MapFolders` contains all 6 map IDs, and `Tilesets` has 14 rows. Map tile payloads reference tileset `9f8935bd-8fde-49ac-9b27-571274696681` (`autotiles_ground.png`).
+- Snapshot `Client and Editor/resources/mapcache.db`: `mapcache` has 6 rows, one for each map ID, each containing PNG data; revisions include map entries at revision 1.
+- All copied databases previously passed SQLite `PRAGMA integrity_check = ok`. These records prove the copied map data is present; they do not yet prove server activation or Android rendering.
