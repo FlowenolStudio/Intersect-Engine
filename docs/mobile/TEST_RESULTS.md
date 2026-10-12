@@ -1,6 +1,6 @@
 # Test results
 
-Environment: Windows 11, x64; .NET SDK `10.0.401`; no .NET 8 runtime installed; no .NET workloads installed; Git `2.53.0.windows.3`.
+Environment: Windows 11, x64; .NET SDK `10.0.401`; no .NET 8 runtime installed; Android workload `36.1.2/10.0.100` installed; Git `2.53.0.windows.3`.
 
 ## Source baseline
 
@@ -19,8 +19,9 @@ Environment: Windows 11, x64; .NET SDK `10.0.401`; no .NET 8 runtime installed; 
 
 - `dotnet workload install android --skip-manifest-update`: passed; Android workload `36.1.2/10.0.100` installed for the .NET 10 SDK.
 - A minimal `net10.0-android` project using `MonoGame.Framework.Android` `3.8.2.1105` restored successfully after constraining runtime identifiers to Android ABIs.
-- Build is currently blocked by missing Android SDK and Java 11+; the local dependency target could not provision them because Java is absent. No Android APK was produced.
-- `adb`, `sdkmanager`, `avdmanager`, and `java` are not available on PATH.
+- Local Android SDK and JDK dependencies were provisioned under Engine-Development (`.android-sdk` and `.jdk`).
+- `dotnet build experiments/AndroidPoc/Intersect.Android.Poc.csproj -c Debug --no-restore -p:AndroidSdkDirectory=... -p:JavaSdkDirectory=...`: passed, 0 errors, 2 warnings.
+- The warning is `XA0141`: MonoGame 3.8.2.1105 bundles `libopenal32.so` without Android 16's 16 KB page-size compatibility. No APK/device launch was attempted; `adb` is not on PATH.
 
 ## Stable package smoke check
 

@@ -13,7 +13,7 @@
 
 ## Active
 
-- Android workload is installed in the Engine development environment; install an isolated JDK and Android SDK next.
+- Android workload and local SDK/JDK dependencies are installed in the Engine development environment; minimal MonoGame Android project builds.
 - Establish the smallest client-core/backend seam for an Android proof of concept.
 - Install/enable the missing .NET 8 runtime needed to execute the existing NUnit tests, subject to environment approval.
 
