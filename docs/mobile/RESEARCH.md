@@ -45,5 +45,5 @@ Keep the authoritative server and protocol unchanged. First isolate a reusable c
 - Server data: `Server/resources/gamedata.db` (map/game definitions), `playerdata.db` (accounts/characters), and `logging.db`.
 - Client cache: `Client and Editor/resources/mapcache.db`; static client resources include tilesets, entities, GUI, sounds, music, and fonts.
 - A separate snapshot exists at `Engine-Development/test-data/Game-DevelopmentSnapshot`. Each SQLite database was copied through SQLite's online backup API and passed `PRAGMA integrity_check`; static files were copied separately. `SNAPSHOT_MANIFEST.json` records hashes.
-- The snapshot's isolated server config uses port `5401`, disables UPnP and external port checks, and the copied client config targets Android emulator host gateway `10.0.2.2:5401`.
+- The snapshot's isolated server config uses UDP port `5401`, disables UPnP and external port checks, and the copied client config targets Android emulator host gateway `10.0.2.2:5401`. Its REST API is separately bound to `127.0.0.1:5402` to avoid the original installation's API on `5400`.
 - The original installation remains untouched. A full cross-database point-in-time snapshot was not claimed because the source server remained active; isolated server startup must be verified before any client connection test.

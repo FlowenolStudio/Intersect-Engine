@@ -15,6 +15,7 @@
 - `Intersect.Client.Framework` is now referenced by the Android probe; compilation succeeds, but client framework runtime integration is not yet complete.
 - `Intersect.Client.Core`, `Intersect.Network`, and their shared dependencies now compile for the Android probe; the APK launches with these assemblies packaged, but the real client startup path is not yet called.
 - Read-only inspection identified `Server/resources/gamedata.db`, `playerdata.db`, `logging.db`, and `Client and Editor/resources/mapcache.db`; SQLite online backups and static resources were copied to `test-data/Game-DevelopmentSnapshot` with SHA-256 manifest verification.
+- Isolated Intersect server now runs from the copied snapshot on UDP `5401`; its REST API is isolated on TCP `5402` and returns HTTP 200.
 
 ## Active
 
@@ -28,4 +29,4 @@
 2. Inventory the actual MonoGame Android backend options compatible with the pinned client package versions.
 3. Create a minimal Android host project without changing the desktop client or server.
 4. Validate the packaged APK's native ELF/zip alignment and test against a 16 KB-page Android image if available.
-5. Resolve isolated server startup under the local .NET 8 runtime, then connect the Android host to port 5401 without touching the original port 5400 server.
+5. Add the Android client network/lifecycle seam and connect it to the isolated UDP server on port 5401; do not use the original port 5400 server.

@@ -35,6 +35,15 @@ Environment: Windows 11, x64; .NET SDK `10.0.401`; isolated .NET 8 runtime under
 - Launched explicit activity `crc641f51c5f7cf8b1497.MainActivity`; process remained alive (`pid=4607`).
 - `dumpsys gfxinfo` reported 2 rendered frames. ADB screenshot was visually verified: full CornflowerBlue surface with a centered dark-green rectangle, no Android error screen.
 - The probe now references `Intersect.Client.Framework` and `Intersect.Client.Framework.Core` transitively; the Android build succeeds with that project reference. Client framework runtime behavior is not yet integrated into the render loop.
+- The probe also references `Intersect.Client.Core` and `Intersect.Network`; Release publish and emulator launch still succeed. This verifies packaging/initialization compatibility only, not the full client startup path.
+
+## Isolated server snapshot
+
+- Initial isolated-server startup failure was diagnosed from its copied log: the copied `appsettings.Production.json` still bound the REST API to `127.0.0.1:5400`, which belongs to the human installation.
+- The isolated appsettings was changed only in `test-data/Game-DevelopmentSnapshot` to bind HTTP API `127.0.0.1:5402`; the game UDP port remains `5401`.
+- With a PTY and the isolated .NET 8 host, the server started successfully. Verified listeners: UDP `0.0.0.0:5401` and TCP `127.0.0.1:5402`.
+- `http://127.0.0.1:5402/` returned HTTP 200 with the isolated server web page.
+- The original server remains on port `5400`; no original files or processes were changed.
 
 ## Git credential-helper diagnosis
 
