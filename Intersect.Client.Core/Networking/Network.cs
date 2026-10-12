@@ -140,6 +140,7 @@ internal static partial class Network
     )
     {
         Globals.WaitingOnServer = false;
+        AndroidClientHost.NotifyBootstrapStep($"network-connection-failed status={connectionEventArgs.NetworkStatus} event={connectionEventArgs.EventId} denied={denied}");
         if (!denied)
         {
             TryConnect();
@@ -153,6 +154,7 @@ internal static partial class Network
 
     private static void OnDisconnected(INetworkLayerInterface sender, ConnectionEventArgs connectionEventArgs)
     {
+        AndroidClientHost.NotifyBootstrapStep($"network-disconnected status={connectionEventArgs.NetworkStatus} event={connectionEventArgs.EventId} gameState={Globals.GameState}");
         var message = connectionEventArgs.EventId == default
             ? Strings.Errors.LostConnection.ToString()
             : Strings.Errors.DisconnectionEvent.ToString(connectionEventArgs.EventId);

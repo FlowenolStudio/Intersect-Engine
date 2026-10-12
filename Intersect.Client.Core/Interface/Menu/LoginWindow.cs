@@ -263,6 +263,7 @@ public partial class LoginWindow : Window, IMainMenuWindow
     {
         if (!Networking.Network.IsConnected)
         {
+            AndroidClientHost.NotifyBootstrapStep($"login-window-hide reason=network-disconnected waiting={Globals.WaitingOnServer}");
             Hide();
             _mainMenu.Show();
             return;

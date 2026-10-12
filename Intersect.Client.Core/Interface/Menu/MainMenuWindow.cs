@@ -23,6 +23,7 @@ public partial class MainMenuWindow : Window
     private readonly Button _buttonSettings;
     private readonly Button _buttonStart;
     private readonly MainMenu _mainMenu;
+    private string? _lastAndroidNetworkState;
 
     // ReSharper disable once SuggestBaseTypeForParameterInConstructor
     public MainMenuWindow(Canvas canvas, MainMenu mainMenu) : base(canvas, Strings.MainMenu.Title, false, $"{nameof(MainMenuWindow)}_{(ClientContext.IsSinglePlayer ? "singleplayer" : "online")}")
@@ -204,6 +205,13 @@ public partial class MainMenuWindow : Window
         else
         {
             UpdateDisabled();
+        }
+
+        var androidNetworkState = $"connected={Networking.Network.IsConnected} waiting={Globals.WaitingOnServer} loginDisabled={_buttonLogin.IsDisabled} registerDisabled={_buttonRegister.IsDisabled}";
+        if (_lastAndroidNetworkState != androidNetworkState)
+        {
+            _lastAndroidNetworkState = androidNetworkState;
+            AndroidClientHost.NotifyBootstrapStep($"main-menu-update {androidNetworkState}");
         }
     }
 
