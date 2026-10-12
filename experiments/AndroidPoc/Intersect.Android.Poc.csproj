@@ -17,10 +17,13 @@
     <TrimMode>full</TrimMode>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Intersect.Client.Framework\Intersect.Client.Framework.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Remove="$(IntersectRepoPath)\assets\intersect-logo-qu.ico" />
     <None Remove="$(IntersectRepoPath)\assets\intersect-logo-qu.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.Android" Version="3.8.2.1105" />
+    <PackageReference Include="MonoGame.Framework.Android" Version="3.8.4.1" />
   </ItemGroup>
 </Project>

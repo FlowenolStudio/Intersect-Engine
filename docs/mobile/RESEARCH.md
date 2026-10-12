@@ -30,3 +30,11 @@
 ## Initial approach
 
 Keep the authoritative server and protocol unchanged. First isolate a reusable client-core target behind platform-neutral interfaces, then add an Android-specific host/backend only after a minimal Android build proves the MonoGame version/backend combination. Preserve the existing desktop client project and data directories throughout.
+
+## Android 16 KB native-library finding
+
+- MonoGame Android `3.8.2.1105` emitted XA0141 for its bundled OpenAL native library.
+- MonoGame `3.8.4.1` is the selected probe dependency. Its release notes identify the release as the Android 16 KB policy update and the build no longer emits XA0141.
+- The general remediation for custom/prebuilt native libraries is to rebuild every `.so` with 16 KB ELF alignment (`-Wl,-z,max-page-size=16384`; Android also documents `-Wl,-z,common-page-size=16384` for older NDKs), then verify both ELF segment alignment and APK zip alignment.
+- If a dependency still fails, alternatives are: upgrade to a fixed vendor package, rebuild/fork the native dependency with the flags, or replace the dependency. Suppressing XA0141 is not a compatibility fix.
+- Sources: Android Developers, “Support 16 KB page sizes”; MonoGame 3.8.4.1 release/migration notes. This probe has not yet been tested on a 16 KB-page Android image.
