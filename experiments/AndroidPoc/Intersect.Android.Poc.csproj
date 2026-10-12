@@ -10,6 +10,8 @@
     <ApplicationId>com.companyname.Intersect.Android.Poc</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <PublishTrimmed>false</PublishTrimmed>
+    <RunAOTCompilation>false</RunAOTCompilation>
     <!--
       Enables trim analyzers and full trimming during Release mode.
       To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options#trimming-granularity
@@ -23,6 +25,12 @@
   <ItemGroup>
     <EmbeddedResource Remove="$(IntersectRepoPath)\assets\intersect-logo-qu.ico" />
     <None Remove="$(IntersectRepoPath)\assets\intersect-logo-qu.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="../../test-data/Game-DevelopmentSnapshot/Client and Editor/resources/**/*"
+                  Link="resources\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="..\..\Intersect.Client.Core\Resources\Shaders\*.xnb"
+                  Link="shaders\Intersect.Client.Resources.Shaders.%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.Android" Version="3.8.4.1" />

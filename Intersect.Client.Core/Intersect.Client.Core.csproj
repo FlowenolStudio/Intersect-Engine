@@ -11,6 +11,7 @@
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <RootNamespace>Intersect.Client</RootNamespace>
     <AssemblyName>Intersect Client Core</AssemblyName>
+    <DefineConstants Condition="'$(RuntimeIdentifier)' == 'android-x64' Or '$(RuntimeIdentifier)' == 'android-arm64'">$(DefineConstants);INTERSECT_ANDROID</DefineConstants>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

@@ -159,9 +159,17 @@ internal partial class IntersectGame : Game
     /// </summary>
     protected override void Initialize()
     {
+        AndroidClientHost.NotifyBootstrapStep($"initialize-begin thread={Environment.CurrentManagedThreadId}");
         base.Initialize();
+        AndroidClientHost.NotifyBootstrapStep(
+            $"initialize-base-return viewport={GraphicsDevice.Viewport.Width}x{GraphicsDevice.Viewport.Height} " +
+            $"backbuffer={GraphicsDevice.PresentationParameters.BackBufferWidth}x{GraphicsDevice.PresentationParameters.BackBufferHeight}"
+        );
 
-        PlatformStatistics.GPUStatisticsProvider = GL.CreateGPUStatisticsProvider();
+        if (!OperatingSystem.IsAndroid())
+        {
+            PlatformStatistics.GPUStatisticsProvider = GL.CreateGPUStatisticsProvider();
+        }
 
         if (_updater != null)
         {
@@ -188,10 +196,12 @@ internal partial class IntersectGame : Game
         }
 
         mGraphics.ApplyChanges();
+        AndroidClientHost.NotifyBootstrapStep("initialize-end");
     }
 
     private void IntersectInit()
     {
+        AndroidClientHost.NotifyBootstrapStep("intersect-init-begin");
         (Core.Graphics.Renderer as MonoRenderer)?.Init(GraphicsDevice);
 
         // TODO: Remove old netcode
@@ -206,12 +216,15 @@ internal partial class IntersectGame : Game
         Main.Start(Context);
 
         mInitialized = true;
+        AndroidClientHost.NotifyBootstrapStep("intersect-init-end");
 
         PostStartupAction();
     }
 
     private TimeSpan _elapsedSincePlatformStatisticsRefresh;
     private bool _restartFailed;
+    private bool _androidFirstUpdateReported;
+    private bool _androidFirstDrawReported;
 
     /// <summary>
     ///     Allows the game to run logic such as updating the world,
@@ -220,6 +233,11 @@ internal partial class IntersectGame : Game
     /// <param name="gameTime">Provides a snapshot of timing values.</param>
     protected override void Update(GameTime gameTime)
     {
+        if (OperatingSystem.IsAndroid() && !_androidFirstUpdateReported)
+        {
+            _androidFirstUpdateReported = true;
+            AndroidClientHost.NotifyBootstrapStep($"update-first totalMs={gameTime.TotalGameTime.TotalMilliseconds:0} elapsedMs={gameTime.ElapsedGameTime.TotalMilliseconds:0}");
+        }
         _elapsedSincePlatformStatisticsRefresh += gameTime.ElapsedGameTime;
         if (_elapsedSincePlatformStatisticsRefresh.TotalSeconds > 1)
         {
@@ -298,7 +316,9 @@ internal partial class IntersectGame : Game
 
     protected override void LoadContent()
     {
+        AndroidClientHost.NotifyBootstrapStep("load-content-begin");
         base.LoadContent();
+        AndroidClientHost.NotifyBootstrapStep("load-content-end");
 
         if (_updater != null)
         {
@@ -312,6 +332,11 @@ internal partial class IntersectGame : Game
     /// <param name="gameTime">Provides a snapshot of timing values.</param>
     protected override void Draw(GameTime gameTime)
     {
+        if (OperatingSystem.IsAndroid() && !_androidFirstDrawReported)
+        {
+            _androidFirstDrawReported = true;
+            AndroidClientHost.NotifyBootstrapStep($"draw-first totalMs={gameTime.TotalGameTime.TotalMilliseconds:0} viewport={GraphicsDevice.Viewport.Width}x{GraphicsDevice.Viewport.Height}");
+        }
         GraphicsDevice.BlendState = BlendState.NonPremultiplied;
 
         GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Black);
@@ -627,6 +652,8 @@ internal partial class IntersectGame : Game
     /// </summary>
     internal partial class MonoGameRunner : IPlatformRunner
     {
+        private static IntersectGame? s_androidGame;
+
         /// <inheritdoc />
         public void Start(IClientContext context, Action postStartupAction)
         {
@@ -644,11 +671,17 @@ internal partial class IntersectGame : Game
             }
 
             AndroidClientHost.NotifyBootstrapStep("creating-intersect-game");
-            using var game = new IntersectGame(context, postStartupAction);
+            var game = new IntersectGame(context, postStartupAction);
             AndroidClientHost.NotifyBootstrapStep("intersect-game-created");
             AndroidClientHost.NotifyGameCreated(game);
             try
             {
+                if (OperatingSystem.IsAndroid())
+                {
+                    // Android's MonoGame Run() schedules the view lifecycle and returns;
+                    // retain the game until Activity shutdown instead of disposing it here.
+                    s_androidGame = game;
+                }
                 AndroidClientHost.NotifyBootstrapStep("game-run-begin");
                 game.Run();
                 AndroidClientHost.NotifyBootstrapStep("game-run-return");
@@ -658,6 +691,11 @@ internal partial class IntersectGame : Game
                 AndroidClientHost.NotifyStartupFailed(exception);
                 context.Logger.LogCritical(exception, "Game is crashing due to an exception");
                 throw;
+            }
+
+            if (!OperatingSystem.IsAndroid())
+            {
+                game.Dispose();
             }
         }
 

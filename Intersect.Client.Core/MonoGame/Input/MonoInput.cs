@@ -52,10 +52,9 @@ public partial class MonoInput : GameInput
 
     public MonoInput(Game myGame)
     {
-        if (!OperatingSystem.IsAndroid())
-        {
-            myGame.Window.TextInput += Window_TextInput;
-        }
+#if !INTERSECT_ANDROID
+        myGame.Window.TextInput += Window_TextInput;
+#endif
         mMyGame = myGame;
 
         _intersectToMonoGameKeyMap = [];

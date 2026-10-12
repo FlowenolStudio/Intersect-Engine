@@ -193,10 +193,23 @@ internal partial class MonoRenderer : GameRenderer
             _graphicsDeviceManager.HardwareModeSwitch = !isFullscreen;
         }
 
-        var displayBounds = Sdl2.GetDisplayBounds();
-        var currentDisplayBounds = displayBounds[0];
-        var currentDisplayWidth = currentDisplayBounds.w;
-        var currentDisplayHeight = currentDisplayBounds.h;
+        var currentDisplayBounds = default(SDL_Rect);
+        int currentDisplayWidth;
+        int currentDisplayHeight;
+        if (OperatingSystem.IsAndroid())
+        {
+            currentDisplayWidth = _graphicsDeviceManager.GraphicsDevice.Viewport.Width;
+            currentDisplayHeight = _graphicsDeviceManager.GraphicsDevice.Viewport.Height;
+            currentDisplayBounds.w = currentDisplayWidth;
+            currentDisplayBounds.h = currentDisplayHeight;
+        }
+        else
+        {
+            var displayBounds = Sdl2.GetDisplayBounds();
+            currentDisplayBounds = displayBounds[0];
+            currentDisplayWidth = currentDisplayBounds.w;
+            currentDisplayHeight = currentDisplayBounds.h;
+        }
         if (isFullscreen)
         {
             width = currentDisplayWidth;
@@ -232,7 +245,7 @@ internal partial class MonoRenderer : GameRenderer
 
         _displayWidth = _graphicsDeviceManager.GraphicsDevice.Adapter.CurrentDisplayMode.Width;
         _displayHeight = _graphicsDeviceManager.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
-        if (updateFullscreen)
+        if (!OperatingSystem.IsAndroid() && updateFullscreen)
         {
             _gameWindow.Position = new Microsoft.Xna.Framework.Point(
                 currentDisplayBounds.x + ((currentDisplayWidth - _screenWidth) / 2),

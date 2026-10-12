@@ -10,6 +10,34 @@ namespace Intersect.Android.Poc;
 [Activity(Label = "@string/app_name", MainLauncher = true)]
 public class MainActivity : AndroidGameActivity
 {
+    private int _copiedResourceFiles;
+
+    private void CopyAssetTree(string assetPath, string targetPath)
+    {
+        var children = Assets?.List(assetPath) ?? Array.Empty<string>();
+        if (children.Length > 0)
+        {
+            Directory.CreateDirectory(targetPath);
+            foreach (var child in children)
+            {
+                CopyAssetTree($"{assetPath}/{child}", Path.Combine(targetPath, child));
+            }
+
+            return;
+        }
+
+        if (File.Exists(targetPath))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        using var source = Assets!.Open(assetPath);
+        using var destination = File.Create(targetPath);
+        source.CopyTo(destination);
+        _copiedResourceFiles++;
+    }
+
     private static void Lifecycle(string stage)
     {
         Log.Info(
@@ -79,8 +107,8 @@ public class MainActivity : AndroidGameActivity
                            ?? throw new InvalidOperationException("Android app files directory is unavailable.");
         System.Environment.CurrentDirectory = appFilesPath;
         var resourcesPath = Path.GetFullPath(Intersect.Configuration.ClientConfiguration.ResourcesDirectory);
-        Directory.CreateDirectory(resourcesPath);
-        Log.Info("IntersectAndroid", $"Prepared client resources directory: {resourcesPath}");
+        CopyAssetTree("resources", resourcesPath);
+        Log.Info("IntersectAndroid", $"Prepared client resources directory: {resourcesPath}, copiedFiles={_copiedResourceFiles}");
 
         Log.Info("IntersectAndroid", "Invoking Intersect.Client.Core.Program.Main");
         Intersect.Client.Core.Program.Main(

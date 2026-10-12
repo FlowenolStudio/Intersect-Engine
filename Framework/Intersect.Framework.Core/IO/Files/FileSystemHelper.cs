@@ -131,7 +131,10 @@ public static partial class FileSystemHelper
 
     public static string WriteToTemporaryFolder(string name, Stream stream)
     {
-        var temporaryDirectoryPath = Path.Combine(Path.GetTempPath(), Assembly.GetEntryAssembly().GetName().Name);
+        var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName().Name
+                                ?? typeof(FileSystemHelper).Assembly.GetName().Name
+                                ?? "IntersectClient";
+        var temporaryDirectoryPath = Path.Combine(Path.GetTempPath(), entryAssemblyName);
         if (!EnsureDirectoryExists(temporaryDirectoryPath))
         {
             throw new Exception();

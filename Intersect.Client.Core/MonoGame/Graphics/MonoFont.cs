@@ -23,7 +23,20 @@ public partial class MonoFont : Font<SpriteFont>, IFont
                 () =>
                 {
                     var pathWithoutExtension = GameContentManager.RemoveExtension(fileInfo.FullName);
-                    return contentManager.Load<SpriteFont>(pathWithoutExtension);
+                    if (!OperatingSystem.IsAndroid())
+                    {
+                        return contentManager.Load<SpriteFont>(pathWithoutExtension);
+                    }
+
+                    var originalRootDirectory = contentManager.RootDirectory;
+                    contentManager.RootDirectory = "resources";
+                    var assetPath = Path.GetRelativePath(
+                        Path.Combine(Environment.CurrentDirectory, "resources"),
+                        pathWithoutExtension
+                    ).Replace('\\', '/');
+                    var font = contentManager.Load<SpriteFont>(assetPath);
+                    contentManager.RootDirectory = originalRootDirectory;
+                    return font;
                 }
             );
         }

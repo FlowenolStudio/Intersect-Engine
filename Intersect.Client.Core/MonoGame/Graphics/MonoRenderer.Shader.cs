@@ -1,4 +1,5 @@
 using System.Numerics;
+using Intersect.Client.Core;
 using Intersect.Client.Framework.Graphics;
 using Intersect.IO.Files;
 using Microsoft.Xna.Framework.Content;
@@ -46,9 +47,19 @@ internal partial class MonoRenderer
         internal Shader(MonoRenderer renderer, string shaderName, ContentManager contentManager) : base(shaderName)
         {
             _renderer = renderer;
-            using var resourceStream = typeof(Shader).Assembly.GetManifestResourceStream(shaderName);
-            var extractedPath = FileSystemHelper.WriteToTemporaryFolder(shaderName, resourceStream);
-            PlatformShader = contentManager.Load<Effect>(Path.ChangeExtension(extractedPath, null));
+            if (OperatingSystem.IsAndroid())
+            {
+                var originalRootDirectory = contentManager.RootDirectory;
+                contentManager.RootDirectory = "shaders";
+                PlatformShader = contentManager.Load<Effect>(Path.ChangeExtension(shaderName, null));
+                contentManager.RootDirectory = originalRootDirectory;
+            }
+            else
+            {
+                using var resourceStream = typeof(Shader).Assembly.GetManifestResourceStream(shaderName);
+                var extractedPath = FileSystemHelper.WriteToTemporaryFolder(shaderName, resourceStream);
+                PlatformShader = contentManager.Load<Effect>(Path.ChangeExtension(extractedPath, null));
+            }
         }
 
         internal Shader(MonoRenderer renderer, Effect effect) : base(effect.ToString())

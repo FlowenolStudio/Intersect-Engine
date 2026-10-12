@@ -130,6 +130,7 @@ internal static partial class Network
     private static void OnConnected(INetworkLayerInterface sender, ConnectionEventArgs connectionEventArgs)
     {
         Globals.SoftLogout = false;
+        AndroidClientHost.NotifyBootstrapStep($"network-connected host={ClientConfiguration.Instance.Host} port={ClientConfiguration.Instance.Port}");
     }
 
     private static void OnConnectionFailed(
@@ -190,6 +191,7 @@ internal static partial class Network
         }
 
         Globals.WaitingOnServer = true;
+        AndroidClientHost.NotifyBootstrapStep($"network-connect host={ClientConfiguration.Instance.Host} port={ClientConfiguration.Instance.Port}");
         Socket.Connect(ClientConfiguration.Instance.Host, ClientConfiguration.Instance.Port);
     }
 

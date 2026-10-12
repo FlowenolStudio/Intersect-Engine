@@ -8,6 +8,7 @@ using Intersect.Configuration;
 using Intersect.Core;
 using Intersect.Factories;
 using Intersect.Framework.Logging;
+using Intersect.Framework.Core.GameObjects.Animations;
 using Intersect.Framework.SystemInformation;
 using Intersect.Network;
 using Intersect.Plugins;
@@ -27,6 +28,7 @@ internal static partial class Bootstrapper
     [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicMethods, typeof(PacketHandlerRegistry))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.PublicMethods, typeof(PacketHandler))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Intersect.Client.MonoGame.IntersectGame.MonoGameRunner))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(AnimationDescriptor))]
     public static void Start(Assembly entryAssembly, params string[] args)
     {
         AndroidClientHost.NotifyBootstrapStep("parser");
