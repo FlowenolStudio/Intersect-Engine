@@ -179,6 +179,7 @@ internal partial class MonoSocket : GameSocket
 
     public override void Connect(string host, int port)
     {
+        AndroidClientHost.NotifyBootstrapStep($"socket-connect host={host} port={port} transport=udp");
         if (!Network.Connect())
         {
             ApplicationContext.Context.Value?.Logger.LogError("An error occurred while attempting to connect.");
@@ -192,6 +193,7 @@ internal partial class MonoSocket : GameSocket
             return;
         }
 
+        AndroidClientHost.NotifyBootstrapStep($"packet-send type={intersectPacket.GetType().Name}");
         _network?.Send(intersectPacket);
     }
 
@@ -203,6 +205,7 @@ internal partial class MonoSocket : GameSocket
         }
 
         PacketQueue.Enqueue(new KeyValuePair<IConnection, IPacket>(connection, packet));
+        AndroidClientHost.NotifyBootstrapStep($"packet-receive type={packet.GetType().Name}");
 
         return true;
     }
@@ -260,6 +263,7 @@ internal partial class MonoSocket : GameSocket
                                                     VersionData = SharedConstants.VersionData,
                                                 }
                                             );
+                                            AndroidClientHost.NotifyBootstrapStep($"server-status-send endpoint={serverEndpoint}");
 
                                             _serverStatusRequestMetadata = requestMetadata;
                                         }
@@ -321,6 +325,7 @@ internal partial class MonoSocket : GameSocket
 
         var elapsed = now - requestMetadata.RequestTime;
         _ping = (int)elapsed.TotalMilliseconds;
+        AndroidClientHost.NotifyBootstrapStep($"server-status-receive pingMs={_ping}");
         _serverStatusRequestMetadata = null;
     }
 
