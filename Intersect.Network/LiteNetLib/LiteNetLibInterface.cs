@@ -280,7 +280,16 @@ public sealed class LiteNetLibInterface : INetworkLayerInterface, INetEventListe
         DeliveryMethod deliveryMethod
     )
     {
-        if (!_connectionIdLookup.TryGetValue(peer.Id, out var connectionId))
+        // LiteNetLib can deliver the first approval packet before OnPeerConnected
+        // when events are unsynchronized. The connection tags the peer before
+        // connecting, so use that tag as a provisional lookup without marking
+        // the peer connected until OnPeerConnected is delivered.
+        if (!_connectionIdLookup.TryGetValue(peer.Id, out var connectionId) && peer.Tag is Guid taggedConnectionId)
+        {
+            connectionId = taggedConnectionId;
+        }
+
+        if (connectionId == default)
         {
             ApplicationContext.Context.Value?.Logger.LogWarning($"RNIP: {peer} ({channelNumber}, {deliveryMethod})");
             return;

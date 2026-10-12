@@ -1,5 +1,6 @@
 using Android.App;
 using Android.Content;
+using Android.Content.PM;
 using Android.OS;
 using Android.Text;
 using Android.Util;
@@ -12,7 +13,12 @@ using AndroidProcess = Android.OS.Process;
 
 namespace Intersect.Android.Poc;
 
-[Activity(Label = "@string/app_name", MainLauncher = true)]
+[Activity(
+    Label = "@string/app_name",
+    MainLauncher = true,
+    ScreenOrientation = ScreenOrientation.Landscape,
+    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.KeyboardHidden
+)]
 public class MainActivity : AndroidGameActivity
 {
     private int _copiedResourceFiles;

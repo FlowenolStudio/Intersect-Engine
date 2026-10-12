@@ -43,7 +43,7 @@ internal partial class MonoSocket : GameSocket
     /// <summary>
     /// Interval between status pings in ms (e.g. full, bad version, etc.)
     /// </summary>
-#if DEBUG
+#if DEBUG && !INTERSECT_ANDROID
     private const long ServerStatusPingInterval = 1_000;
 #else
     private const long ServerStatusPingInterval = 15_000;
