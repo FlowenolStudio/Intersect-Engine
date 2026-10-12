@@ -101,14 +101,23 @@ internal partial class IntersectGame : Game
         var resolvedWorkingDirectory = Path.GetFullPath(workingDirectory, Environment.CurrentDirectory);
         Content.RootDirectory = resolvedWorkingDirectory;
         IsMouseVisible = true;
+        AndroidClientHost.NotifyBootstrapStep("content-manager-create-begin");
         Globals.ContentManager = new MonoContentManager();
+        AndroidClientHost.NotifyBootstrapStep("content-manager-created");
+        AndroidClientHost.NotifyBootstrapStep("database-create-begin");
         Globals.Database = new JsonDatabase();
+        AndroidClientHost.NotifyBootstrapStep("database-created");
 
         // Load configuration.
+        AndroidClientHost.NotifyBootstrapStep("preferences-load-begin");
         Globals.Database.LoadPreferences();
+        AndroidClientHost.NotifyBootstrapStep("preferences-load-return");
         AndroidClientHost.NotifyBootstrapStep("preferences-loaded");
 
-        Window.IsBorderless = Context.StartupOptions.BorderlessWindow;
+        if (!OperatingSystem.IsAndroid())
+        {
+            Window.IsBorderless = Context.StartupOptions.BorderlessWindow;
+        }
 
         _gameRenderer = new MonoRenderer(mGraphics, Content, this)
         {
@@ -124,12 +133,14 @@ internal partial class IntersectGame : Game
         Interface.Interface.GwenRenderer = new IntersectRenderer(null, Core.Graphics.Renderer);
         Interface.Interface.GwenInput = new IntersectInput();
 
-        // Windows
-        Window.Position = new Microsoft.Xna.Framework.Point(
-            _gameRenderer.ScreenWidth - _gameRenderer.ActiveResolution.X,
-            _gameRenderer.ScreenHeight - _gameRenderer.ActiveResolution.Y
-        ) / new Microsoft.Xna.Framework.Point(2);
-        Window.AllowAltF4 = false;
+        if (!OperatingSystem.IsAndroid())
+        {
+            Window.Position = new Microsoft.Xna.Framework.Point(
+                _gameRenderer.ScreenWidth - _gameRenderer.ActiveResolution.X,
+                _gameRenderer.ScreenHeight - _gameRenderer.ActiveResolution.Y
+            ) / new Microsoft.Xna.Framework.Point(2);
+            Window.AllowAltF4 = false;
+        }
 
         // Reuse Updater object instead of creating a new one each time.
         string? updateUrl = ClientConfiguration.Instance.UpdateUrl;
@@ -638,10 +649,13 @@ internal partial class IntersectGame : Game
             AndroidClientHost.NotifyGameCreated(game);
             try
             {
+                AndroidClientHost.NotifyBootstrapStep("game-run-begin");
                 game.Run();
+                AndroidClientHost.NotifyBootstrapStep("game-run-return");
             }
             catch (Exception exception)
             {
+                AndroidClientHost.NotifyStartupFailed(exception);
                 context.Logger.LogCritical(exception, "Game is crashing due to an exception");
                 throw;
             }

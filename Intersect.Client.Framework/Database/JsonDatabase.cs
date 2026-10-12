@@ -27,8 +27,11 @@ public class JsonDatabase : GameDatabase
 
     private static string GetInstancePath(ClientConfiguration instance)
     {
+        var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName().Name
+                                ?? typeof(JsonDatabase).Assembly.GetName().Name
+                                ?? "IntersectClient";
         return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ".intersect",
-            Assembly.GetEntryAssembly().GetName().Name, $"{instance.Host}.{instance.Port}.json");
+            entryAssemblyName, $"{instance.Host}.{instance.Port}.json");
     }
 
     private bool TryOpenOrCreate(string instancePath, [NotNullWhen(true)] out JObject? instance)
